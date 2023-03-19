@@ -1,14 +1,17 @@
 package com.matttax.giphyvk
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.matttax.giphyvk.retrofit.GeneralData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class GifsAdapter(val context: Context, val gifs: MutableList<DataObject>) : RecyclerView.Adapter<GifsAdapter.ViewHolder>() {
+class GifsAdapter(val context: MainActivity, val gifs: MutableList<GeneralData>) : RecyclerView.Adapter<GifsAdapter.ViewHolder>() {
 
     lateinit var mListener: OnItemClickListener
     interface OnItemClickListener {
@@ -34,7 +37,11 @@ class GifsAdapter(val context: Context, val gifs: MutableList<DataObject>) : Rec
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val data = gifs[position]
-        Glide.with(context).load(data.images.ogImage.url).into(holder.imageView)
+       CoroutineScope(Dispatchers.IO).launch {
+            context.runOnUiThread {
+                Glide.with(context).load(data.imageData.gifImage.url).into(holder.imageView)
+            }
+        }
     }
 
     override fun getItemCount(): Int {

@@ -4,107 +4,107 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.inputmethod.EditorInfo
 import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.widget.SearchView
 import android.widget.Toast
-import androidx.core.view.isInvisible
-import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.asLiveData
 import com.google.android.flexbox.FlexboxLayoutManager
+import com.matttax.giphyvk.databinding.ActivityMainBinding
+import com.matttax.giphyvk.retrofit.*
+import com.matttax.giphyvk.room.MainDB
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 
 const val BASE_URL = "https://api.giphy.com/v1/"
 
-
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        val gifs = mutableListOf<DataObject>()
-        var offset = 0
-        var searchText = ""
-        var trending = true
-
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val db = MainDB.getDB(this)
+        val gifs = mutableListOf<GeneralData>()
+        val searchConfig = SearchConfig(0, SearchType.TRENDING, null)
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val gifAPI = retrofit.create(GifAPI::class.java)
 
-        val rv = findViewById<RecyclerView>(R.id.gifList)
-        val adapter = GifsAdapter(this, gifs)
-        rv.adapter = adapter
-        rv.setHasFixedSize(true)
-        rv.layoutManager = FlexboxLayoutManager(this)
-        adapter.setOnItemClickListener(object : GifsAdapter.OnItemClickListener {
+
+        val gifAdapter = GifsAdapter(this, gifs)
+        gifAdapter.setOnItemClickListener(object : GifsAdapter.OnItemClickListener {
             override fun onItemClick(position: Int) {
                 val intent = Intent(this@MainActivity, GifActivity::class.java)
-                intent.putExtra("url", gifs[position].images.ogImage.url)
+                intent.putExtra("url", gifs[position].imageData.gifImage.url)
+                intent.putExtra("title", gifs[position].title)
                 startActivity(intent)
             }
         })
+        binding.gifList.apply {
+            adapter = gifAdapter
+            layoutManager = FlexboxLayoutManager(this@MainActivity)
+        }
 
-        val retrofit = Retrofit.Builder().baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create()).build()
-        val retroService = retrofit.create(DataService::class.java)
-        val loader = object: Callback<DataResult?> {
-            override fun onResponse(call: Call<DataResult?>, response: Response<DataResult?>) {
+        val loader = object: Callback<GifListData> {
+            override fun onResponse(call: Call<GifListData>, response: Response<GifListData>) {
                 val body = response.body()
-                gifs.clear()
                 if (body != null) {
-                    gifs.addAll(body.res)
+                    gifs.addAll(body.images)
+                    binding.gifList.adapter?.notifyItemRangeChanged(0, 25)
+                } else {
+                    Toast.makeText(this@MainActivity, "Failed to load", Toast.LENGTH_LONG)
+                        .show()
                 }
             }
-            override fun onFailure(call: Call<DataResult?>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "Cannot connect", Toast.LENGTH_LONG)
+
+            override fun onFailure(call: Call<GifListData>, t: Throwable) {
+                Log.i("load", t.message.toString())
             }
         }
 
-        retroService.getTrendingGifs(0).enqueue(loader)
 
-        val next = findViewById<Button>(R.id.nextButton)
-        val back = findViewById<Button>(R.id.previousButton)
-        val pageText = findViewById<TextView>(R.id.page)
-
-        back.isInvisible = true
-
-        next.setOnClickListener {
-            gifs.clear()
-            offset += 25
-            pageText.text = "Page " + (offset / 25)
-            if (trending) {
-                retroService.getTrendingGifs(offset).enqueue(loader)
-            } else {
-                retroService.searchGifs(searchText, offset)
-            }
-            if (offset >= 25)
-                back.isInvisible = false
-        }
-
-        back.setOnClickListener {
-            gifs.clear()
-            offset -= 25
-            pageText.text = "Page " + (offset / 25)
-            if (trending) {
-                retroService.getTrendingGifs(offset).enqueue(loader)
-            } else {
-                retroService.searchGifs(searchText, offset)
-            }
-            if (offset == 0) {
-                back.isInvisible = true
-            }
-        }
-
-        val editText = findViewById<EditText>(R.id.searchBar)
-        editText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+        binding.search.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(text: String?): Boolean {
                 gifs.clear()
-                searchText = editText.text.toString()
-                trending = false
-                offset = 0
-                retroService.searchGifs(searchText, offset).enqueue(loader)
+                searchConfig.offset = 0
+                searchConfig.searchType = SearchType.BY_TEXT
+                searchConfig.searchText = text
+                gifAPI.getBySearch(searchConfig.offset, searchConfig.searchText ?: "cats").enqueue(loader)
+                binding.search.clearFocus()
+                return true
             }
-            true
+
+            override fun onQueryTextChange(text: String?) = true
+
+        })
+
+        val load = findViewById<Button>(R.id.load)
+        load.setOnClickListener {
+            searchConfig.offset += 24
+            if (searchConfig.searchType == SearchType.TRENDING) {
+                gifAPI.getTrending(searchConfig.offset).enqueue(loader)
+            } else {
+                gifAPI.getBySearch(searchConfig.offset, searchConfig.searchText ?: "cats").enqueue(loader)
+            }
         }
 
+        binding.favorites.setOnClickListener {
+            gifs.clear()
+            db.getDao().getAll().asLiveData().observe(this) {
+                val favoritesList = it.map { g -> GeneralData(ImageData(GifImage(g.url)), g.title) }
+                gifs.addAll(favoritesList)
+                binding.gifList.adapter?.notifyItemRangeChanged(0, favoritesList.size)
+            }
+            searchConfig.toDefault()
+        }
 
+        binding.trending.setOnClickListener {
+            gifs.clear()
+            gifAPI.getTrending(0).enqueue(loader)
+        }
+
+        gifAPI.getTrending(0).enqueue(loader)
     }
 }
 
