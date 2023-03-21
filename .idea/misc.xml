@@ -3,9 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/1661322/AndroidStudioProjects/GiphyVK/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.2125" />
         <entry key="..\:/Users/1661322/AndroidStudioProjects/GiphyVK/app/src/main/res/layout/activity_gif.xml" value="0.22826086956521738" />
         <entry key="..\:/Users/1661322/AndroidStudioProjects/GiphyVK/app/src/main/res/layout/activity_main.xml" value="0.22826086956521738" />
         <entry key="..\:/Users/1661322/AndroidStudioProjects/GiphyVK/app/src/main/res/layout/gif_image_layout.xml" value="0.22826086956521738" />
+        <entry key="..\:/Users/1661322/AndroidStudioProjects/GiphyVK/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2125" />
       </map>
     </option>
   </component>
