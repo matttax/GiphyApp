@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">GiphyVK</string>
+
+    <string name="trending">Trending</string>
+    <string name="favorites">Favorites</string>
+    <string name="try_again">Try again</string>
 </resources>

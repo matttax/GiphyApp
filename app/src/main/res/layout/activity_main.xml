@@ -1,57 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity"
+    android:orientation="horizontal">
 
-    <SearchView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/search"
-        />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_marginTop="100dp"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="50dp"
-        android:id="@+id/gifList"
         />
 
-    <Button
-        android:layout_width="0dp"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/watchGifContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/gifList"
-        app:layout_constraintEnd_toEndOf="@id/gifList"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintWidth_percent="0.45"
-        android:text="load more"
-        android:id="@+id/load"
-        />
-
-    <Button
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        app:layout_constraintBottom_toTopOf="@id/gifList"
-        app:layout_constraintTop_toBottomOf="@id/search"
-        app:layout_constraintStart_toStartOf="@id/search"
-        android:text="trending"
-        android:id="@+id/trending"
-        />
-
-    <Button
-        android:layout_width="170dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintBottom_toTopOf="@id/gifList"
-        app:layout_constraintTop_toBottomOf="@id/search"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:text="favorites"
-        android:id="@+id/favorites"
-        />
+        app:layout_constraintBottom_toBottomOf="@id/fragmentContainer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
