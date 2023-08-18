@@ -17,7 +17,7 @@
         android:theme="@style/Theme.GiphyVK"
         tools:targetApi="31">
         <activity
-            android:name="com.matttax.giphyapp.MainActivity"
+            android:name="com.matttax.giphyapp.view.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:exported="true">
             <intent-filter>

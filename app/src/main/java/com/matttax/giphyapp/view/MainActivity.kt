@@ -1,10 +1,12 @@
-package com.matttax.giphyapp
+package com.matttax.giphyapp.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Parcelable
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LifecycleOwner
+import com.matttax.giphyapp.Navigator
+import com.matttax.giphyapp.R
+import com.matttax.giphyapp.ResultListener
 import com.matttax.giphyapp.databinding.ActivityMainBinding
 import com.matttax.giphyapp.fragments.GifListFragment
 import com.matttax.giphyapp.fragments.WatchGifFragment

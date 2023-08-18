@@ -7,15 +7,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexboxLayoutManager
-import com.matttax.giphyapp.*
-import com.matttax.giphyapp.network.*
 import com.matttax.giphyapp.datasource.MainDB
 import com.matttax.giphyapp.R
 import com.matttax.giphyapp.databinding.FragmentGifListBinding
 import com.matttax.giphyapp.datasource.GifDao
 import com.matttax.giphyapp.model.GifModel
 import com.matttax.giphyapp.model.GifModel.Companion.toGifModel
+import com.matttax.giphyapp.model.SearchConfig
+import com.matttax.giphyapp.model.SearchType
+import com.matttax.giphyapp.navigator
+import com.matttax.giphyapp.network.GifAPI
+import com.matttax.giphyapp.view.GifsAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -24,7 +28,7 @@ import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class GifListFragment: Fragment(R.layout.fragment_gif_list) {
+class GifListFragment : Fragment(R.layout.fragment_gif_list) {
 
     @Inject
     lateinit var gifAPI: GifAPI
@@ -45,7 +49,7 @@ class GifListFragment: Fragment(R.layout.fragment_gif_list) {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) : View {
+    ): View {
         navigator().listenResult(viewLifecycleOwner) {
             gifs.removeAt(it)
             binding.gifList.adapter?.notifyItemRemoved(it)
@@ -60,7 +64,7 @@ class GifListFragment: Fragment(R.layout.fragment_gif_list) {
         searchConfig = SearchConfig(0, SearchType.TRENDING, null)
 
         binding.search.setOnQueryTextListener(
-            object: SearchView.OnQueryTextListener {
+            object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(text: String?): Boolean {
                     gifs.clear()
                     searchConfig = SearchConfig(0, SearchType.BY_TEXT, text).also {
@@ -73,12 +77,6 @@ class GifListFragment: Fragment(R.layout.fragment_gif_list) {
                 override fun onQueryTextChange(text: String?) = true
             }
         )
-
-        binding.load.setOnClickListener {
-            searchConfig = searchConfig.copy(offset = searchConfig.offset + 24).also {
-                showData(it)
-            }
-        }
 
         binding.favorites.setOnClickListener {
             gifs.clear()
@@ -142,6 +140,22 @@ class GifListFragment: Fragment(R.layout.fragment_gif_list) {
         binding.gifList.apply {
             adapter = gifAdapter
             layoutManager = FlexboxLayoutManager(requireContext())
+            addOnScrollListener(
+                object : RecyclerView.OnScrollListener() {
+                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                        super.onScrollStateChanged(recyclerView, newState)
+                        if (
+                            !recyclerView.canScrollVertically(1) &&
+                            newState == RecyclerView.SCROLL_STATE_IDLE
+                        ) {
+                            searchConfig =
+                                searchConfig.copy(offset = searchConfig.offset + 24).also {
+                                    showData(it)
+                                }
+                        }
+                    }
+                }
+            )
         }
     }
 }

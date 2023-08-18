@@ -1,4 +1,4 @@
-package com.matttax.giphyapp
+package com.matttax.giphyapp.model
 
 data class SearchConfig(
     val offset: Int,
