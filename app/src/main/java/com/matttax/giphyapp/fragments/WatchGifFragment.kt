@@ -12,8 +12,15 @@ import com.matttax.giphyapp.datasource.GifDao
 import com.matttax.giphyapp.navigator
 import com.matttax.giphyapp.datasource.GifEntity
 import com.matttax.giphyapp.datasource.MainDB
+import com.matttax.giphyapp.download.GifDownloader
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WatchGifFragment: Fragment(R.layout.fragment_watch_gif) {
+
+    @Inject
+    lateinit var gifDownloader: GifDownloader
 
     lateinit var binding: FragmentWatchGifBinding
     lateinit var gifDao: GifDao
@@ -33,6 +40,10 @@ class WatchGifFragment: Fragment(R.layout.fragment_watch_gif) {
         val titleText = arguments?.getString(ARGUMENTS_KEY_TITLE) ?: ""
         val url = arguments?.getString(ARGUMENTS_KEY_URL) ?: ""
         val isFavorite = arguments?.getBoolean(ARGUMENTS_IS_FAVORITE) ?: false
+
+        binding.toStorage.setOnClickListener {
+            gifDownloader.downloadByUrl(url)
+        }
 
         if (isFavorite) {
             binding.toFavorites.text = "Remove from favorites"
